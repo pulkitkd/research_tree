@@ -4,7 +4,7 @@ Vibe coded tree to visualize ongoing work.
 
 Single-file standalone HTML (`Research Tree _standalone_.html`) — open it in a
 browser, no server required. State persists to `localStorage` per browser; use
-**export ↓** in the top bar to save a portable JSON copy.
+**export ↑** in the top bar to save a portable JSON copy.
 
 ## Controls
 
@@ -12,9 +12,9 @@ browser, no server required. State persists to `localStorage` per browser; use
 
 - **tabs A / B / C** — switch between Freeform Canvas, Spine-Snap, and
   Notebook Trellis layouts (all three share the same underlying tree)
-- **export ↓** — download the current tree as
+- **export ↑** — download the current tree as
   `research-tree-YYYY-MM-DD.json`
-- **import ↑** — load a tree from a JSON file (replaces the current one;
+- **import ↓** — load a tree from a JSON file (replaces the current one;
   reversible via undo)
 
 ### Keyboard
@@ -38,3 +38,11 @@ Tree interaction (in any of the three views):
 The HTML embeds its React components as base64-encoded, gzipped entries.
 Unpacked sources live in [`src/`](src/) — see
 [`src/README.md`](src/README.md) for the edit loop.
+
+## Future updates
+
+- **Promote todo → node.** A button next to each checkbox in the detail
+  panel that turns the todo into a real child node — title copied from the
+  todo text, the corresponding line stripped from the parent's
+  description. For when a sub-task outgrows a bullet and needs its own
+  substructure.
