@@ -47,7 +47,9 @@ def extract(tag):
 
 manifest = json.loads(extract("manifest"))
 template = json.loads(extract("template"))
-(VENDOR.parent / "index.template.html").write_text(template, encoding="utf-8")
+# Write the template into src/ — it carries all the CSS + outer HTML
+# structure, so most layout/styling edits touch this file.
+(SRC / "index.template.html").write_text(template, encoding="utf-8")
 
 def guess_ext(data, mime=None):
     if mime:
