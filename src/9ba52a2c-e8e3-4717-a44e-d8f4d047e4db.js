@@ -149,6 +149,19 @@ function useStore() {
       : n
     ));
   };
+  // Ctrl+click semantics: symmetric gesture between two nodes. If they are
+  // already linked in either direction, unlink them; otherwise create a new
+  // link (a → b). Returns 'linked' | 'unlinked' | null so callers can flash UI.
+  const toggleLink = (a, b) => {
+    if (a === b) return null;
+    const nodeA = nodes.find(n => n.id === a);
+    const nodeB = nodes.find(n => n.id === b);
+    if (!nodeA || !nodeB) return null;
+    if ((nodeB.parents || []).includes(a)) { disconnect(a, b); return 'unlinked'; }
+    if ((nodeA.parents || []).includes(b)) { disconnect(b, a); return 'unlinked'; }
+    connect(a, b);
+    return 'linked';
+  };
 
   const undo = () => {
     breakCoalesce();
@@ -172,7 +185,7 @@ function useStore() {
   };
 
   return {
-    nodes, setNodes, update, remove, add, reset, load, connect, disconnect,
+    nodes, setNodes, update, remove, add, reset, load, connect, disconnect, toggleLink,
     undo, redo, canUndo: past.length > 0, canRedo: future.length > 0,
   };
 }

@@ -30,7 +30,7 @@ Tree interaction (in any of the three views):
 
 - **drag** a node to move it
 - **drag the `+`** handle from one node onto another to connect them
-- **`Ctrl`+click** two nodes to link them (first click picks source, second picks target; `Esc` cancels)
+- **`Ctrl`+click** two nodes to toggle a link between them — creates a link if they're not connected, removes the link if they already are (in either direction). `Esc` cancels mid-gesture.
 - **drag the background** to pan the canvas
 
 ## Editing the source

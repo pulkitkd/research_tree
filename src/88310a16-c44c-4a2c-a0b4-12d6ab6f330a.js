@@ -1,5 +1,5 @@
 function V2Notebook({ store, tweaks }) {
-  const { nodes, update, remove, add, connect } = store;
+  const { nodes, update, remove, add, connect, toggleLink } = store;
   const svgRef = React.useRef(null);
   const [selected, setSelected] = React.useState(null);
   const [dragNode, setDragNode] = React.useState(null);
@@ -51,7 +51,7 @@ function V2Notebook({ store, tweaks }) {
     (pt) => hitTestCard({ x: pt.x - view.tx, y: pt.y - view.ty })
   );
 
-  const ctrl = useCtrlConnect((a, b) => connect(a, b));
+  const ctrl = useCtrlConnect((a, b) => toggleLink(a, b));
 
   const onMove = (e) => {
     addDrag.onMouseMove(e);

@@ -1,5 +1,5 @@
 function V4Canvas({ store, tweaks }) {
-  const { nodes, update, remove, add, connect, undo, redo, canUndo, canRedo } = store;
+  const { nodes, update, remove, add, connect, toggleLink, undo, redo, canUndo, canRedo } = store;
   const svgRef = React.useRef(null);
   const [selected, setSelected] = React.useState(null);
   const [view, setView] = React.useState({ tx: 0, ty: 0, scale: 1 });
@@ -47,7 +47,7 @@ function V4Canvas({ store, tweaks }) {
     hitTest
   );
 
-  const ctrl = useCtrlConnect((a, b) => connect(a, b));
+  const ctrl = useCtrlConnect((a, b) => toggleLink(a, b));
 
   const onMove = (e) => {
     addDrag.onMouseMove(e);
