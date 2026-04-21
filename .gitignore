@@ -14,3 +14,7 @@ build/
 
 # exported tree snapshots — portable backups, not repo state
 research-tree-*.json
+
+# Screenshots
+screenshots/
+screenshots/*
