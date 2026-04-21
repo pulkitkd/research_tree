@@ -521,6 +521,16 @@ body {
 .node-core.done      { stroke: var(--done); }
 .node-core.abandoned { stroke: var(--abandoned); stroke-dasharray: 3 3; }
 
+/* Filled pie wedge that replaces .node-core when a node has checkbox todos.
+   Fraction of node filled = fraction of todos completed (or a small
+   fixed nudge slice if there are todos but none are done yet). */
+.node-pie { stroke: none; pointer-events: none; }
+.node-pie.ongoing   { fill: var(--ongoing); }
+.node-pie.blocked   { fill: var(--blocked); }
+.node-pie.clarify   { fill: var(--clarify); }
+.node-pie.done      { fill: var(--done); }
+.node-pie.abandoned { fill: var(--abandoned); opacity: 0.55; }
+
 .node-label {
   font-family: var(--hand);
   font-size: 16px;
@@ -663,6 +673,39 @@ body {
 .status-chip.active.clarify   { background: var(--clarify); color: white; border-color: var(--clarify); }
 .status-chip.active.done      { background: var(--done); color: white; border-color: var(--done); }
 .status-chip.active.abandoned { background: var(--abandoned); color: white; border-color: var(--abandoned); }
+
+/* Interactive checklist derived from the description text. Higher
+   specificity than .field label so todo rows don't inherit the mono/uppercase
+   field-label style. */
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.todo-list .todo-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  font-family: var(--hand);
+  font-size: 16px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink);
+  margin: 0;
+}
+.todo-list .todo-item input {
+  margin-top: 4px;
+  cursor: pointer;
+  accent-color: var(--ink);
+}
+.todo-list .todo-item.done {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
 
 .panel-actions {
   display: flex;

@@ -2,12 +2,66 @@
 
 const { useState, useRef, useEffect, useMemo } = React;
 
+// Todos are lines starting with a checkbox: `[] foo`, `[x] foo`, or the
+// Markdown-style `- [ ] foo` / `- [x] foo`. The leading dash is optional.
+// Empty brackets count as unchecked. Anchored to line start so `[]string`
+// mid-sentence is ignored. Toggle preserves whatever format you typed.
+const TODO_RE = /^(\s*(?:[-*]\s+)?)\[([ xX]?)\](\s*)(.*)$/;
+
+function parseTodos(desc) {
+  const lines = (desc || '').split('\n');
+  const todos = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(TODO_RE);
+    if (m) todos.push({ lineIdx: i, done: m[2].toLowerCase() === 'x', text: m[4] });
+  }
+  return todos;
+}
+
+function toggleTodoInDescription(desc, todoIndex) {
+  const lines = (desc || '').split('\n');
+  let n = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(TODO_RE);
+    if (!m) continue;
+    if (n === todoIndex) {
+      const next = m[2].toLowerCase() === 'x' ? ' ' : 'x';
+      lines[i] = `${m[1]}[${next}]${m[3]}${m[4]}`;
+      break;
+    }
+    n++;
+  }
+  return lines.join('\n');
+}
+
+// Pie-slice SVG path centered at origin, starting at 12 o'clock, clockwise.
+// Caller handles fraction === 1 as a full ellipse instead.
+function piePath(rx, ry, fraction) {
+  const f = Math.max(0, Math.min(0.999, fraction));
+  const theta = 2 * Math.PI * f;
+  const x = rx * Math.sin(theta);
+  const y = -ry * Math.cos(theta);
+  const large = theta > Math.PI ? 1 : 0;
+  return `M 0 0 L 0 ${-ry} A ${rx} ${ry} 0 ${large} 1 ${x.toFixed(3)} ${y.toFixed(3)} Z`;
+}
+
+// Sliver angle shown when todos exist but none are done yet — a nudge, not a
+// measurement, so fixed regardless of total count.
+const TODO_NUDGE_FRAC = 12 / 360;
+
 function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddDrag, showDate = true, r = 16, labelPosition = 'right' }) {
   const [jx, jy] = wobble(node.id, 2.5);
   const [rx, ry] = wobble(node.id + 'r', 1.5);
   const rrx = r + rx, rry = r + ry;
   const cls = `node-circle ${node.status}`;
   const above = labelPosition === 'above';
+
+  const todos = useMemo(() => parseTodos(node.description), [node.description]);
+  const total = todos.length;
+  const doneN = todos.reduce((a, t) => a + (t.done ? 1 : 0), 0);
+  const hasTodos = total > 0;
+  const allDone = hasTodos && doneN === total;
+  const frac = !hasTodos ? 0 : (doneN === 0 ? TODO_NUDGE_FRAC : doneN / total);
 
   return (
     <g className="node-g" transform={`translate(${cx + jx}, ${cy + jy})`}>
@@ -20,8 +74,14 @@ function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddD
         onMouseDown={(e) => onStartDrag && onStartDrag(e, node)}
         onClick={(e) => { e.stopPropagation(); onClick && onClick(node, e); }}
       />
-      {/* inner core ring to indicate status even on white abandoned */}
-      <ellipse rx={rrx - 4} ry={rry - 4} className={`node-core ${node.status}`} />
+      {/* inner core: plain ring when no todos, pie wedge when todos exist */}
+      {hasTodos ? (
+        allDone
+          ? <ellipse rx={rrx - 4} ry={rry - 4} className={`node-pie ${node.status}`} />
+          : <path d={piePath(rrx - 4, rry - 4, frac)} className={`node-pie ${node.status}`} />
+      ) : (
+        <ellipse rx={rrx - 4} ry={rry - 4} className={`node-core ${node.status}`} />
+      )}
 
       {above ? (
         <>
@@ -71,6 +131,9 @@ function StatusChip({ value, onChange }) {
 
 function DetailForm({ node, onChange, onDelete, onClose }) {
   if (!node) return null;
+  const todos = parseTodos(node.description);
+  const doneN = todos.reduce((a, t) => a + (t.done ? 1 : 0), 0);
+  const toggleTodo = (i) => onChange({ description: toggleTodoInDescription(node.description, i) });
   return (
     <>
       <button className="xclose" onClick={onClose} aria-label="close">✕</button>
@@ -89,9 +152,24 @@ function DetailForm({ node, onChange, onDelete, onClose }) {
         <label>Status</label>
         <StatusChip value={node.status} onChange={v => onChange({ status: v })} />
       </div>
+      {todos.length > 0 && (
+        <div className="field">
+          <label>Todos ({doneN}/{todos.length})</label>
+          <ul className="todo-list">
+            {todos.map((t, i) => (
+              <li key={i}>
+                <label className={`todo-item ${t.done ? 'done' : ''}`}>
+                  <input type="checkbox" checked={t.done} onChange={() => toggleTodo(i)} />
+                  <span>{t.text || <em style={{opacity:0.5}}>(blank)</em>}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="field">
         <label>Description / notes</label>
-        <textarea value={node.description} onChange={e => onChange({ description: e.target.value })} placeholder="what happened, what's next, blockers..." />
+        <textarea value={node.description} onChange={e => onChange({ description: e.target.value })} placeholder={"what happened, what's next…\nType `[] item` for a todo."} />
       </div>
 
       <div className="panel-actions">
@@ -200,3 +278,5 @@ window.useAddByDrag = useAddByDrag;
 window.useCtrlConnect = useCtrlConnect;
 window.makeHitTest = makeHitTest;
 window.toSvgPoint = toSvgPoint;
+window.parseTodos = parseTodos;
+window.toggleTodoInDescription = toggleTodoInDescription;
