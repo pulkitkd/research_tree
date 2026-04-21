@@ -697,10 +697,19 @@ body {
   color: var(--ink);
   margin: 0;
 }
-.todo-list .todo-item input {
+.todo-list .todo-item input[type="checkbox"] {
+  /* override .field input { width:100% } so the checkbox doesn't push its
+     sibling text to the far right of the flex row */
+  width: auto;
+  flex: 0 0 auto;
   margin-top: 4px;
   cursor: pointer;
   accent-color: var(--ink);
+}
+.todo-list .todo-item span {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
 }
 .todo-list .todo-item.done {
   color: var(--ink-soft);

@@ -101,8 +101,8 @@ function App() {
           ))}
         </div>
         <div className="io-buttons" style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-          <button className="btn ghost" onClick={exportJson} title="Download current tree as JSON">export ↓</button>
-          <button className="btn ghost" onClick={() => fileInputRef.current && fileInputRef.current.click()} title="Load a tree from a JSON file (replaces current)">import ↑</button>
+          <button className="btn ghost" onClick={exportJson} title="Download current tree as JSON">export ↑</button>
+          <button className="btn ghost" onClick={() => fileInputRef.current && fileInputRef.current.click()} title="Load a tree from a JSON file (replaces current)">import ↓</button>
           <input ref={fileInputRef} type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={onImportFile} />
         </div>
       </div>
