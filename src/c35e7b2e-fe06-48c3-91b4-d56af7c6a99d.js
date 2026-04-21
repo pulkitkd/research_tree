@@ -11,7 +11,9 @@ function App() {
   const [view, setView] = React.useState(() => {
     try { return localStorage.getItem('research-tree-view') || TWEAK_DEFAULTS.defaultView; } catch (e) { return TWEAK_DEFAULTS.defaultView; }
   });
-  const [tweaksOn, setTweaksOn] = React.useState(false);
+  const [tweaksOn, setTweaksOn] = React.useState(() => {
+    try { return localStorage.getItem('research-tree-tweaks') === '1'; } catch (e) { return false; }
+  });
   const [tweaks, setTweaks] = React.useState({
     hSpace: TWEAK_DEFAULTS.hSpace,
     vSpace: TWEAK_DEFAULTS.vSpace,
@@ -43,6 +45,14 @@ function App() {
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); store.undo(); }
       else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); store.redo(); }
+      else if (e.key === ',') {
+        e.preventDefault();
+        setTweaksOn(v => {
+          const next = !v;
+          try { localStorage.setItem('research-tree-tweaks', next ? '1' : '0'); } catch (e) {}
+          return next;
+        });
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
