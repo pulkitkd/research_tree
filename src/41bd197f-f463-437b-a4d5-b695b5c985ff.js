@@ -75,13 +75,6 @@ function V4Canvas({ store, tweaks }) {
 
   return (
     <div className="stage" onMouseMove={onMove} onMouseUp={onUp} onMouseDown={onBgDown}>
-      <HintStrip>
-        <span>freeform · drag <span className="kbd">+</span> onto another node to <b style={{color:'var(--rust)'}}>connect</b></span>
-        <span>or <span className="kbd">Ctrl</span>+click two nodes to link them</span>
-        <span>drag bg to pan · <span className="kbd">Ctrl</span>+<span className="kbd">Z</span> undo</span>
-        {ctrl.firstId && <span style={{color:'var(--rust)'}}>→ pick second node · <span className="kbd">Esc</span> to cancel</span>}
-      </HintStrip>
-
       <div className="undo-dock">
         <button className="btn ghost" onClick={() => {
           const cx = 400 + (Math.random() - 0.5) * 120;

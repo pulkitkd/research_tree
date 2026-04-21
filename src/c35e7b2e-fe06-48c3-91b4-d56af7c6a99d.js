@@ -1,4 +1,4 @@
-// App shell — tabs, tweaks, shared store.
+// App shell — tabs, shared store, export/import.
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "defaultView": "v4",
@@ -6,17 +6,14 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "vSpace": 1.0
 }/*EDITMODE-END*/;
 
+// Views still read tweaks.hSpace / tweaks.vSpace for layout math; the UI to
+// change them was dropped, so just freeze at defaults.
+const tweaks = { hSpace: TWEAK_DEFAULTS.hSpace, vSpace: TWEAK_DEFAULTS.vSpace };
+
 function App() {
   const store = useStore();
   const [view, setView] = React.useState(() => {
     try { return localStorage.getItem('research-tree-view') || TWEAK_DEFAULTS.defaultView; } catch (e) { return TWEAK_DEFAULTS.defaultView; }
-  });
-  const [tweaksOn, setTweaksOn] = React.useState(() => {
-    try { return localStorage.getItem('research-tree-tweaks') === '1'; } catch (e) { return false; }
-  });
-  const [tweaks, setTweaks] = React.useState({
-    hSpace: TWEAK_DEFAULTS.hSpace,
-    vSpace: TWEAK_DEFAULTS.vSpace,
   });
 
   React.useEffect(() => {
@@ -24,20 +21,7 @@ function App() {
   }, [view]);
 
   React.useEffect(() => {
-    const onMsg = (e) => {
-      if (!e.data) return;
-      if (e.data.type === '__activate_edit_mode') setTweaksOn(true);
-      if (e.data.type === '__deactivate_edit_mode') setTweaksOn(false);
-    };
-    window.addEventListener('message', onMsg);
-    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
-    return () => window.removeEventListener('message', onMsg);
-  }, []);
-
-  // Undo/redo keyboard shortcuts (global — works in all variants)
-  React.useEffect(() => {
     const onKey = (e) => {
-      // Ignore when typing in inputs/textareas
       const t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       const mod = e.ctrlKey || e.metaKey;
@@ -45,24 +29,10 @@ function App() {
       const k = e.key.toLowerCase();
       if (k === 'z' && !e.shiftKey) { e.preventDefault(); store.undo(); }
       else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); store.redo(); }
-      else if (e.key === ',') {
-        e.preventDefault();
-        setTweaksOn(v => {
-          const next = !v;
-          try { localStorage.setItem('research-tree-tweaks', next ? '1' : '0'); } catch (e) {}
-          return next;
-        });
-      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [store.undo, store.redo, store.add]);
-
-  const persist = (patch) => {
-    const next = { ...tweaks, ...patch };
-    setTweaks(next);
-    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');
-  };
+  }, [store.undo, store.redo]);
 
   const fileInputRef = React.useRef(null);
 
@@ -140,34 +110,6 @@ function App() {
       {view === 'v4' && <V4Canvas   store={store} tweaks={tweaks} />}
       {view === 'v1' && <V1Spine    store={store} tweaks={tweaks} />}
       {view === 'v2' && <V2Notebook store={store} tweaks={tweaks} />}
-
-      {tweaksOn && (
-        <div className="tweaks-panel">
-          <h4>Tweaks</h4>
-          <div className="tweak-row">
-            <span>default view</span>
-            <select value={view} onChange={e => { setView(e.target.value); persist({ defaultView: e.target.value }); }}>
-              <option value="v4">A — Freeform</option>
-              <option value="v1">B — Spine-Snap</option>
-              <option value="v2">C — Notebook</option>
-            </select>
-          </div>
-          <div className="tweak-row">
-            <span>horizontal spacing</span>
-            <input type="range" min="0.6" max="1.6" step="0.05" value={tweaks.hSpace}
-              onChange={e => persist({ hSpace: parseFloat(e.target.value) })} />
-          </div>
-          <div className="tweak-row">
-            <span>vertical spacing</span>
-            <input type="range" min="0.6" max="1.6" step="0.05" value={tweaks.vSpace}
-              onChange={e => persist({ vSpace: parseFloat(e.target.value) })} />
-          </div>
-          <div className="tweak-row">
-            <span>reset data</span>
-            <button className="btn" onClick={() => { if(confirm('reset the demo tree?')) store.reset(); }}>reset</button>
-          </div>
-        </div>
-      )}
     </>
   );
 }

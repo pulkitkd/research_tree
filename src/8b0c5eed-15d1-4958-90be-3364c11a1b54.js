@@ -94,13 +94,6 @@ function V1Spine({ store, tweaks }) {
 
   return (
     <div className="stage" onMouseMove={onMove} onMouseUp={onUp} onMouseDown={onBgDown}>
-      <HintStrip>
-        <span>strict lanes · drag to snap to grid</span>
-        <span>drag <span className="kbd">+</span> onto another node to <b style={{color:'var(--rust)'}}>connect</b></span>
-        <span><span className="kbd">Ctrl</span>+click two nodes to link</span>
-        {ctrl.firstId && <span style={{color:'var(--rust)'}}>→ pick second node</span>}
-      </HintStrip>
-
       <svg ref={svgRef} width="100%" height="100%"
            style={{cursor: pan ? 'grabbing' : (addDrag.drag ? 'crosshair' : (dragNode ? 'grabbing' : 'default'))}}
            onClick={() => setSelected(null)}>

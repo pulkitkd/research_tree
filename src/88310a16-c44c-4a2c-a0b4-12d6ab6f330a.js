@@ -91,13 +91,6 @@ function V2Notebook({ store, tweaks }) {
 
   return (
     <div className="stage" onMouseMove={onMove} onMouseUp={onUp} onMouseDown={onBgDown}>
-      <HintStrip>
-        <span>notebook · drag cards freely</span>
-        <span>drag <span className="kbd">+</span> onto another card to <b style={{color:'var(--rust)'}}>connect</b></span>
-        <span><span className="kbd">Ctrl</span>+click two cards to link</span>
-        {ctrl.firstId && <span style={{color:'var(--rust)'}}>→ pick second card</span>}
-      </HintStrip>
-
       <svg ref={svgRef} width="100%" height="100%"
            style={{cursor: pan ? 'grabbing' : (addDrag.drag ? 'crosshair' : (dragNode ? 'grabbing' : 'default'))}}
            onClick={() => setSelected(null)}>

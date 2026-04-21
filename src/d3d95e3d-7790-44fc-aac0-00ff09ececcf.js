@@ -114,10 +114,6 @@ function Legend() {
   );
 }
 
-function HintStrip({ children }) {
-  return <div className="hint-strip">{children}</div>;
-}
-
 // Drag-to-create helper hook.
 // onCreate(fromNode, pt)   — pointer released over empty space
 // onConnect(fromNode, toNode) — pointer released over an existing node (optional)
@@ -200,7 +196,6 @@ window.SketchyNode = SketchyNode;
 window.StatusChip = StatusChip;
 window.DetailForm = DetailForm;
 window.Legend = Legend;
-window.HintStrip = HintStrip;
 window.useAddByDrag = useAddByDrag;
 window.useCtrlConnect = useCtrlConnect;
 window.makeHitTest = makeHitTest;

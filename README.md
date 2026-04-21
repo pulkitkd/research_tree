@@ -23,9 +23,15 @@ browser, no server required. State persists to `localStorage` per browser; use
 |---|---|
 | `Ctrl+Z` / `Cmd+Z` | undo |
 | `Ctrl+Shift+Z` / `Cmd+Shift+Z` / `Ctrl+Y` | redo |
-| `Ctrl+,` / `Cmd+,` | toggle the **Tweaks** panel (spacing sliders, default view, reset data) |
 
 Keyboard shortcuts are suppressed while typing in a text field.
+
+Tree interaction (in any of the three views):
+
+- **drag** a node to move it
+- **drag the `+`** handle from one node onto another to connect them
+- **`Ctrl`+click** two nodes to link them (first click picks source, second picks target; `Esc` cancels)
+- **drag the background** to pan the canvas
 
 ## Editing the source
 
