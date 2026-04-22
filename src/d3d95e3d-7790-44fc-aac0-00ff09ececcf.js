@@ -33,7 +33,7 @@ function piePath(rx, ry, fraction) {
 // measurement, so fixed regardless of total count.
 const TODO_NUDGE_FRAC = 12 / 360;
 
-function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddDrag, showDate = true, r = 16, labelPosition = 'right' }) {
+function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddDrag, r = 16, labelPosition = 'right' }) {
   const [jx, jy] = wobble(node.id, 2.5);
   const [rx, ry] = wobble(node.id + 'r', 1.5);
   const rrx = r + rx, rry = r + ry;
@@ -68,15 +68,9 @@ function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddD
       )}
 
       {above ? (
-        <>
-          <text className={`node-label ${node.status}`} x={0} y={-rry - 14} textAnchor="middle">{node.title}</text>
-          {showDate && <text className="node-date" x={0} y={rry + 14} textAnchor="middle">{node.date}</text>}
-        </>
+        <text className={`node-label ${node.status}`} x={0} y={-rry - 14} textAnchor="middle">{node.title}</text>
       ) : (
-        <>
-          <text className={`node-label ${node.status}`} x={r + 8} y={4}>{node.title}</text>
-          {showDate && <text className="node-date" x={r + 8} y={18}>{node.date}</text>}
-        </>
+        <text className={`node-label ${node.status}`} x={r + 8} y={4}>{node.title}</text>
       )}
 
       {/* + handle to drag a new child */}
