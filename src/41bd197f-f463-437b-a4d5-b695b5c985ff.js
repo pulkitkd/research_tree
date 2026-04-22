@@ -1,15 +1,22 @@
 function V4Canvas({ store, tweaks }) {
-  const { nodes, update, remove, add, connect, toggleLink, undo, redo, canUndo, canRedo } = store;
+  const { nodes, update, updateMany, remove, add, connect, toggleLink, undo, redo, canUndo, canRedo } = store;
   const svgRef = React.useRef(null);
-  const [selected, setSelected] = React.useState(null);
+  // `selected` is a Set of ids — purely for selection (sel-ring + group drag).
+  // Detail card is gated by `openId` (double-click to open) so selection
+  // gestures like shift+click aren't blocked by the modal.
+  const [selected, setSelected] = React.useState(() => new Set());
+  const [openId, setOpenId] = React.useState(null);
   const [view, setView] = React.useState({ tx: 0, ty: 0, scale: 1 });
   const [pan, setPan] = React.useState(null);
+  const panMovedRef = React.useRef(false);
+  // dragNode: { ids: [...], offsets: { [id]: {ox,oy} }, moved: bool } — one
+  // shape handles both single-node drags and group drags.
   const [dragNode, setDragNode] = React.useState(null);
   const justDraggedRef = React.useRef(false);
 
-  // Listen for external select events (e.g. Ctrl+N creates a node then asks us to open it)
+  // External select (e.g. after creating a node) replaces selection with {id}.
   React.useEffect(() => {
-    const onSelect = (e) => setSelected(e.detail.id);
+    const onSelect = (e) => setSelected(new Set([e.detail.id]));
     window.addEventListener('research-tree:select', onSelect);
     return () => window.removeEventListener('research-tree:select', onSelect);
   }, []);
@@ -30,8 +37,23 @@ function V4Canvas({ store, tweaks }) {
 
   const startNodeDrag = (e, node) => {
     e.stopPropagation();
+    // Shift-click is a selection gesture; let the click handler take over.
+    if (e.shiftKey) return;
+    // Starting a drag cancels any pending Ctrl+click connect/disconnect mode.
+    if (ctrl.firstId) ctrl.cancel();
     const pt = toSvgPoint(svgRef.current, e.clientX, e.clientY);
-    setDragNode({ id: node.id, ox: pt.x - node.x, oy: pt.y - node.y, moved: false });
+    // If the clicked node is part of a multi-selection, drag the whole group;
+    // otherwise drag this node alone. Never mutate selection here — the modal
+    // should only surface on a short click (handled in onClick), not on
+    // mousedown-and-hold.
+    const ids = (selected.has(node.id) && selected.size > 1) ? [...selected] : [node.id];
+    const offsets = {};
+    for (const id of ids) {
+      const n = byId[id];
+      if (!n) continue;
+      offsets[id] = { ox: pt.x - n.x, oy: pt.y - n.y };
+    }
+    setDragNode({ ids, offsets, moved: false });
   };
 
   const addDrag = useAddByDrag(
@@ -41,7 +63,7 @@ function V4Canvas({ store, tweaks }) {
       const dx = pt.x - f.x, dy = pt.y - f.y;
       if (Math.hypot(dx, dy) < 30) return;
       const id = add({ title: 'new step', parents: [fromNode.id], stage: fromNode.stage, lane: fromNode.lane, x: pt.x, y: pt.y, status: 'ongoing' });
-      setSelected(id);
+      setSelected(new Set([id]));
     },
     (fromNode, toNode) => { connect(fromNode.id, toNode.id); },
     hitTest
@@ -53,25 +75,42 @@ function V4Canvas({ store, tweaks }) {
     addDrag.onMouseMove(e);
     if (dragNode) {
       const pt = toSvgPoint(svgRef.current, e.clientX, e.clientY);
-      update(dragNode.id, { x: pt.x - dragNode.ox, y: pt.y - dragNode.oy });
+      const patches = {};
+      for (const id of dragNode.ids) {
+        const off = dragNode.offsets[id];
+        if (!off) continue;
+        patches[id] = { x: pt.x - off.ox, y: pt.y - off.oy };
+      }
+      updateMany(patches);
       setDragNode(d => d ? { ...d, moved: true } : null);
       justDraggedRef.current = true;
     }
     if (pan) {
+      panMovedRef.current = true;
       setView(v => ({ ...v, tx: v.tx + (e.clientX - pan.x), ty: v.ty + (e.clientY - pan.y) }));
       setPan({ x: e.clientX, y: e.clientY });
     }
   };
-  const onUp = (e) => { addDrag.onMouseUp(e); setDragNode(null); setPan(null); };
+  const onUp = (e) => {
+    addDrag.onMouseUp(e);
+    setDragNode(null);
+    // Pure click on empty background (mousedown without subsequent move) clears the selection.
+    if (pan && !panMovedRef.current) setSelected(new Set());
+    setPan(null);
+    panMovedRef.current = false;
+  };
   const onBgDown = (e) => {
     if (e.target === svgRef.current || e.target.classList.contains('bg-capture')) {
       if (ctrl.firstId) ctrl.cancel();
+      panMovedRef.current = false;
       setPan({ x: e.clientX, y: e.clientY });
     }
   };
 
-  const selNode = laid.find(n => n.id === selected);
+  const openNode = openId ? laid.find(n => n.id === openId) : null;
   const overId = addDrag.drag?.overId;
+
+  const closeModal = () => setOpenId(null);
 
   return (
     <div className="stage" onMouseMove={onMove} onMouseUp={onUp} onMouseDown={onBgDown}>
@@ -80,7 +119,7 @@ function V4Canvas({ store, tweaks }) {
           const cx = 400 + (Math.random() - 0.5) * 120;
           const cy = 300 + (Math.random() - 0.5) * 80;
           const id = add({ title: 'new node', parents: [], x: cx, y: cy, stage: 0, lane: 0, status: 'ongoing' });
-          setSelected(id);
+          setSelected(new Set([id]));
         }} title="New unconnected node">+ new</button>
         <button className="btn ghost" disabled={!canUndo} onClick={() => undo()} title="Undo (Ctrl+Z)">↶ undo</button>
         <button className="btn ghost" disabled={!canRedo} onClick={() => redo()} title="Redo (Ctrl+Shift+Z)">↷ redo</button>
@@ -105,18 +144,28 @@ function V4Canvas({ store, tweaks }) {
             const isOver = overId === n.id;
             const isFirst = ctrl.firstId === n.id;
             return (
-              <g key={n.id}>
+              <g key={n.id} onDoubleClick={(e) => { e.stopPropagation(); setOpenId(n.id); }}>
                 {(isOver || isFirst) && <circle cx={n.x} cy={n.y} r="28" fill="none" stroke="var(--rust)" strokeWidth="2.5" strokeDasharray="5 3" />}
                 <SketchyNode
                   node={n}
                   cx={n.x}
                   cy={n.y}
                   labelPosition="above"
-                  selected={selected === n.id}
+                  selected={selected.has(n.id) && !isOver && !isFirst}
                   onClick={(node, e) => {
                     if (e && ctrl.tryPick(e, node)) return;
                     if (justDraggedRef.current) { justDraggedRef.current = false; return; }
-                    setSelected(node.id);
+                    // A non-Ctrl click exits Ctrl+click connect/disconnect mode.
+                    if (ctrl.firstId) ctrl.cancel();
+                    if (e && e.shiftKey) {
+                      setSelected(prev => {
+                        const next = new Set(prev);
+                        if (next.has(node.id)) next.delete(node.id); else next.add(node.id);
+                        return next;
+                      });
+                    } else {
+                      setSelected(new Set([node.id]));
+                    }
                   }}
                   onStartDrag={startNodeDrag}
                   onStartAddDrag={addDrag.startAddDrag}
@@ -127,10 +176,10 @@ function V4Canvas({ store, tweaks }) {
         </g>
       </svg>
 
-      {selNode && (
-        <div className="modal-backdrop" onClick={() => setSelected(null)}>
+      {openNode && (
+        <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <DetailForm node={selNode} onChange={patch => update(selNode.id, patch)} onDelete={() => { remove(selNode.id); setSelected(null); }} onClose={() => setSelected(null)} />
+            <DetailForm node={openNode} onChange={patch => update(openNode.id, patch)} onDelete={() => { remove(openNode.id); closeModal(); }} onClose={closeModal} />
           </div>
         </div>
       )}

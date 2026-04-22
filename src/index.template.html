@@ -512,12 +512,14 @@ body {
 }
 .edge.abandoned { opacity: 0.35; stroke-dasharray: 4 3; }
 
-/* selection ring */
+/* selection ring — a translucent rust fill behind the node, reads like a
+   soft highlight/glow. Solid fill is the persistent "selected" state; the
+   dashed-rust outline ring (rendered inline in V4Canvas) is reserved for
+   ephemeral mid-gesture states: Ctrl+click first-pick and add-drag hover. */
 .sel-ring {
-  fill: none;
-  stroke: var(--rust);
-  stroke-width: 2;
-  stroke-dasharray: 5 4;
+  fill: var(--rust);
+  stroke: none;
+  opacity: 0.25;
 }
 
 /* ghost node while dragging new */

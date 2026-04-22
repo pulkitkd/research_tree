@@ -91,6 +91,15 @@ function useStore() {
     commit('update:' + id);
     setNodesRaw(ns => ns.map(n => n.id === id ? { ...n, ...patch } : n));
   };
+  // Batch update for group drags and batch status changes. `patches` is
+  // { [id]: patch } — one history entry covers the whole set. Coalesce key
+  // is the sorted id set so repeated drags of the same group merge.
+  const updateMany = (patches) => {
+    const ids = Object.keys(patches);
+    if (!ids.length) return;
+    commit('updateMany:' + ids.slice().sort().join(','));
+    setNodesRaw(ns => ns.map(n => patches[n.id] ? { ...n, ...patches[n.id] } : n));
+  };
   const remove = (id) => {
     breakCoalesce(); commit();
     setNodesRaw(ns => ns.filter(n => n.id !== id).map(n => ({ ...n, parents: (n.parents||[]).filter(p => p !== id) })));
@@ -185,7 +194,7 @@ function useStore() {
   };
 
   return {
-    nodes, setNodes, update, remove, add, reset, load, connect, disconnect, toggleLink,
+    nodes, setNodes, update, updateMany, remove, add, reset, load, connect, disconnect, toggleLink,
     undo, redo, canUndo: past.length > 0, canRedo: future.length > 0,
   };
 }
