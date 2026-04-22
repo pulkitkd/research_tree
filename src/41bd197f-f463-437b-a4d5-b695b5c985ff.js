@@ -26,7 +26,7 @@ function V4Canvas({ store, tweaks }) {
     });
   }, [nodes, tweaks.hSpace, tweaks.vSpace]);
   const byId = Object.fromEntries(laid.map(n => [n.id, n]));
-  const hitTest = makeHitTest(laid, 24);
+  const hitTest = makeHitTest(laid, 29);
 
   const startNodeDrag = (e, node) => {
     e.stopPropagation();

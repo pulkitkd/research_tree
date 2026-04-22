@@ -33,7 +33,7 @@ function piePath(rx, ry, fraction) {
 // measurement, so fixed regardless of total count.
 const TODO_NUDGE_FRAC = 12 / 360;
 
-function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddDrag, r = 16, labelPosition = 'right' }) {
+function SketchyNode({ node, cx, cy, selected, onClick, onStartDrag, onStartAddDrag, r = 19, labelPosition = 'right' }) {
   const [jx, jy] = wobble(node.id, 2.5);
   const [rx, ry] = wobble(node.id + 'r', 1.5);
   const rrx = r + rx, rry = r + ry;
