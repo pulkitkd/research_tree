@@ -654,6 +654,36 @@ g.node-g:hover .add-handle-g {
   z-index: 15;
 }
 
+/* batch-action toolbar — appears at top-center when 2+ nodes are selected.
+   Status chips apply to every selected node; delete wipes them all in one
+   undoable step. */
+.batch-toolbar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(250, 246, 238, 0.96);
+  border: 1.5px solid var(--ink);
+  border-radius: 14px 22px 14px 20px;
+  box-shadow: 3px 4px 0 rgba(42,33,25,0.1);
+  z-index: 20;
+  font-family: var(--hand);
+  font-size: 14px;
+}
+.batch-toolbar .batch-label {
+  color: var(--ink-soft);
+  font-size: 13px;
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px dashed var(--ink-faint);
+}
+.batch-toolbar .status-chip:hover { background: var(--paper-2); }
+.batch-toolbar .btn.danger { padding: 3px 10px; font-size: 13px; }
+
 /* modal (v4) */
 .modal-backdrop {
   position: absolute;

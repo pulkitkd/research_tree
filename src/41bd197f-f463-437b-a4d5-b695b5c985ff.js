@@ -1,5 +1,5 @@
 function V4Canvas({ store, tweaks }) {
-  const { nodes, update, updateMany, remove, add, connect, toggleLink, undo, redo, canUndo, canRedo } = store;
+  const { nodes, update, updateMany, remove, removeMany, add, connect, toggleLink, undo, redo, canUndo, canRedo } = store;
   const svgRef = React.useRef(null);
   // `selected` is a Set of ids — purely for selection (sel-ring + group drag).
   // Detail card is gated by `openId` (double-click to open) so selection
@@ -39,7 +39,10 @@ function V4Canvas({ store, tweaks }) {
     e.stopPropagation();
     // Shift-click is a selection gesture; let the click handler take over.
     if (e.shiftKey) return;
-    // Starting a drag cancels any pending Ctrl+click connect/disconnect mode.
+    // Ctrl/Cmd is the connect/disconnect gesture; don't start a drag and
+    // don't cancel the pending ctrl-pick state — the click handler uses it.
+    if (e.ctrlKey || e.metaKey) return;
+    // A plain drag cancels any pending Ctrl+click mode.
     if (ctrl.firstId) ctrl.cancel();
     const pt = toSvgPoint(svgRef.current, e.clientX, e.clientY);
     // If the clicked node is part of a multi-selection, drag the whole group;
@@ -112,6 +115,19 @@ function V4Canvas({ store, tweaks }) {
 
   const closeModal = () => setOpenId(null);
 
+  const applyBatchStatus = (statusId) => {
+    const patches = {};
+    for (const id of selected) patches[id] = { status: statusId };
+    updateMany(patches);
+  };
+  const deleteSelected = () => {
+    const ids = [...selected];
+    if (!ids.length) return;
+    if (!confirm(`Delete ${ids.length} node${ids.length === 1 ? '' : 's'}? Links to these nodes will also be removed.`)) return;
+    removeMany(ids);
+    setSelected(new Set());
+  };
+
   return (
     <div className="stage" onMouseMove={onMove} onMouseUp={onUp} onMouseDown={onBgDown}>
       <div className="undo-dock">
@@ -124,6 +140,24 @@ function V4Canvas({ store, tweaks }) {
         <button className="btn ghost" disabled={!canUndo} onClick={() => undo()} title="Undo (Ctrl+Z)">↶ undo</button>
         <button className="btn ghost" disabled={!canRedo} onClick={() => redo()} title="Redo (Ctrl+Shift+Z)">↷ redo</button>
       </div>
+
+      {selected.size > 1 && (
+        <div className="batch-toolbar">
+          <span className="batch-label">{selected.size} selected</span>
+          {STATUSES.map(s => (
+            <button
+              key={s.id}
+              className="status-chip"
+              onClick={() => applyBatchStatus(s.id)}
+              title={`Mark ${selected.size} as ${s.label}`}
+            >
+              <span className="dot" style={{background: `var(--${s.id})`}} />
+              {s.label}
+            </button>
+          ))}
+          <button className="btn danger" onClick={deleteSelected} title="Delete all selected">delete</button>
+        </div>
+      )}
 
       <svg ref={svgRef} width="100%" height="100%" style={{cursor: pan ? 'grabbing' : (addDrag.drag ? 'crosshair' : 'default')}}>
         <g transform={`translate(${view.tx},${view.ty}) scale(${view.scale})`}>

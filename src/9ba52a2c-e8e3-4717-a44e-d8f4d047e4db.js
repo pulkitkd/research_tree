@@ -104,6 +104,12 @@ function useStore() {
     breakCoalesce(); commit();
     setNodesRaw(ns => ns.filter(n => n.id !== id).map(n => ({ ...n, parents: (n.parents||[]).filter(p => p !== id) })));
   };
+  const removeMany = (ids) => {
+    if (!ids || !ids.length) return;
+    const drop = new Set(ids);
+    breakCoalesce(); commit();
+    setNodesRaw(ns => ns.filter(n => !drop.has(n.id)).map(n => ({ ...n, parents: (n.parents||[]).filter(p => !drop.has(p)) })));
+  };
   const add = (node) => {
     const id = 'n' + Math.random().toString(36).slice(2, 8);
     const full = {
@@ -194,7 +200,7 @@ function useStore() {
   };
 
   return {
-    nodes, setNodes, update, updateMany, remove, add, reset, load, connect, disconnect, toggleLink,
+    nodes, setNodes, update, updateMany, remove, removeMany, add, reset, load, connect, disconnect, toggleLink,
     undo, redo, canUndo: past.length > 0, canRedo: future.length > 0,
   };
 }
