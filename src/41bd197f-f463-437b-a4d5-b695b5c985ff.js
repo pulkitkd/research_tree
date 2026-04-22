@@ -13,6 +13,10 @@ function V4Canvas({ store, tweaks }) {
   // shape handles both single-node drags and group drags.
   const [dragNode, setDragNode] = React.useState(null);
   const justDraggedRef = React.useRef(false);
+  // marquee: { x1, y1, x2, y2 } in outer-SVG coords (== group coords while
+  // scale=1). Populated by shift-drag on empty canvas; on release, every
+  // node whose center lies inside the rect is added to the selection.
+  const [marquee, setMarquee] = React.useState(null);
 
   // External select (e.g. after creating a node) replaces selection with {id}.
   React.useEffect(() => {
@@ -88,6 +92,10 @@ function V4Canvas({ store, tweaks }) {
       setDragNode(d => d ? { ...d, moved: true } : null);
       justDraggedRef.current = true;
     }
+    if (marquee) {
+      const pt = toSvgPoint(svgRef.current, e.clientX, e.clientY);
+      setMarquee(m => m ? { ...m, x2: pt.x - view.tx, y2: pt.y - view.ty } : null);
+    }
     if (pan) {
       panMovedRef.current = true;
       setView(v => ({ ...v, tx: v.tx + (e.clientX - pan.x), ty: v.ty + (e.clientY - pan.y) }));
@@ -97,6 +105,22 @@ function V4Canvas({ store, tweaks }) {
   const onUp = (e) => {
     addDrag.onMouseUp(e);
     setDragNode(null);
+    // Commit the marquee: add every node inside the rect to the selection.
+    if (marquee) {
+      const x0 = Math.min(marquee.x1, marquee.x2);
+      const x1 = Math.max(marquee.x1, marquee.x2);
+      const y0 = Math.min(marquee.y1, marquee.y2);
+      const y1 = Math.max(marquee.y1, marquee.y2);
+      const hitIds = laid.filter(n => n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1).map(n => n.id);
+      if (hitIds.length) {
+        setSelected(prev => {
+          const next = new Set(prev);
+          for (const id of hitIds) next.add(id);
+          return next;
+        });
+      }
+      setMarquee(null);
+    }
     // Pure click on empty background (mousedown without subsequent move) clears the selection.
     if (pan && !panMovedRef.current) setSelected(new Set());
     setPan(null);
@@ -105,10 +129,27 @@ function V4Canvas({ store, tweaks }) {
   const onBgDown = (e) => {
     if (e.target === svgRef.current || e.target.classList.contains('bg-capture')) {
       if (ctrl.firstId) ctrl.cancel();
+      if (e.shiftKey) {
+        // Shift-drag on empty canvas starts a marquee instead of a pan.
+        // Store in group coords so the rect stays anchored to the cursor
+        // even when the canvas has been panned.
+        const pt = toSvgPoint(svgRef.current, e.clientX, e.clientY);
+        const gx = pt.x - view.tx, gy = pt.y - view.ty;
+        setMarquee({ x1: gx, y1: gy, x2: gx, y2: gy });
+        return;
+      }
       panMovedRef.current = false;
       setPan({ x: e.clientX, y: e.clientY });
     }
   };
+
+  // Esc cancels an in-progress marquee without touching the selection.
+  React.useEffect(() => {
+    if (!marquee) return;
+    const onKey = (e) => { if (e.key === 'Escape') setMarquee(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [marquee]);
 
   const openNode = openId ? laid.find(n => n.id === openId) : null;
   const overId = addDrag.drag?.overId;
@@ -173,6 +214,16 @@ function V4Canvas({ store, tweaks }) {
             <path d={sketchPath(byId[addDrag.drag.fromNode.id].x, byId[addDrag.drag.fromNode.id].y, addDrag.drag.x, addDrag.drag.y, 'ghost')} className="drag-edge" />
             {!overId && <circle cx={addDrag.drag.x} cy={addDrag.drag.y} r="14" className="ghost-node" />}
           </>)}
+
+          {marquee && (
+            <rect
+              x={Math.min(marquee.x1, marquee.x2)}
+              y={Math.min(marquee.y1, marquee.y2)}
+              width={Math.abs(marquee.x2 - marquee.x1)}
+              height={Math.abs(marquee.y2 - marquee.y1)}
+              className="marquee-rect"
+            />
+          )}
 
           {laid.map(n => {
             const isOver = overId === n.id;
