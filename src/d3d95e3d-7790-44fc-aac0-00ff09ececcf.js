@@ -18,22 +18,6 @@ function parseTodos(desc) {
   return todos;
 }
 
-function toggleTodoInDescription(desc, todoIndex) {
-  const lines = (desc || '').split('\n');
-  let n = 0;
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(TODO_RE);
-    if (!m) continue;
-    if (n === todoIndex) {
-      const next = m[2].toLowerCase() === 'x' ? ' ' : 'x';
-      lines[i] = `${m[1]}[${next}]${m[3]}${m[4]}`;
-      break;
-    }
-    n++;
-  }
-  return lines.join('\n');
-}
-
 // Pie-slice SVG path centered at origin, starting at 12 o'clock, clockwise.
 // Caller handles fraction === 1 as a full ellipse instead.
 function piePath(rx, ry, fraction) {
@@ -131,14 +115,9 @@ function StatusChip({ value, onChange }) {
 
 function DetailForm({ node, onChange, onDelete, onClose }) {
   if (!node) return null;
-  const todos = parseTodos(node.description);
-  const doneN = todos.reduce((a, t) => a + (t.done ? 1 : 0), 0);
-  const toggleTodo = (i) => onChange({ description: toggleTodoInDescription(node.description, i) });
   return (
     <>
       <button className="xclose" onClick={onClose} aria-label="close">✕</button>
-      <h3>node details</h3>
-      <div style={{fontFamily:'var(--mono)', fontSize:10, color:'var(--ink-soft)'}}>id: {node.id}</div>
 
       <div className="field">
         <label>Title</label>
@@ -152,21 +131,6 @@ function DetailForm({ node, onChange, onDelete, onClose }) {
         <label>Status</label>
         <StatusChip value={node.status} onChange={v => onChange({ status: v })} />
       </div>
-      {todos.length > 0 && (
-        <div className="field">
-          <label>Todos ({doneN}/{todos.length})</label>
-          <ul className="todo-list">
-            {todos.map((t, i) => (
-              <li key={i}>
-                <label className={`todo-item ${t.done ? 'done' : ''}`}>
-                  <input type="checkbox" checked={t.done} onChange={() => toggleTodo(i)} />
-                  <span>{t.text || <em style={{opacity:0.5}}>(blank)</em>}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
       <div className="field">
         <label>Description / notes</label>
         <textarea value={node.description} onChange={e => onChange({ description: e.target.value })} placeholder={"what happened, what's next…\nType `[] item` for a todo."} />
@@ -174,7 +138,6 @@ function DetailForm({ node, onChange, onDelete, onClose }) {
 
       <div className="panel-actions">
         <button className="btn danger" onClick={onDelete}>delete</button>
-        <button className="btn" style={{marginLeft:'auto'}} onClick={onClose}>close</button>
       </div>
     </>
   );
@@ -279,4 +242,3 @@ window.useCtrlConnect = useCtrlConnect;
 window.makeHitTest = makeHitTest;
 window.toSvgPoint = toSvgPoint;
 window.parseTodos = parseTodos;
-window.toggleTodoInDescription = toggleTodoInDescription;
