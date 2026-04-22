@@ -14,11 +14,10 @@ src/
   index.template.html             ← outer HTML + all CSS (edit CSS here)
   9ba52a2c-…js                    ← store: useStore, seed data, undo/redo
   d3d95e3d-…js                    ← shared components: SketchyNode, Legend, DetailForm, hooks
-  8b0c5eed-…js                    ← view V1 Spine-Snap
-  88310a16-…js                    ← view V2 Notebook Trellis
-  41bd197f-…js                    ← view V4 Freeform Canvas
-  c35e7b2e-…js                    ← app shell: tabs, keyboard, export/import
+  41bd197f-…js                    ← view: Freeform Canvas (the only view)
+  c35e7b2e-…js                    ← app shell: top bar, keyboard, export/import
   README.md                       ← UUID → role map
+archive/                          ← retired view JS (V1 Spine-Snap, V2 Notebook Trellis), not bundled
 scripts/
   unpack.py                       ← HTML bundle → src/ (and build/vendor/)
   rebundle.py                     ← src/ → HTML bundle (in place)
@@ -97,8 +96,8 @@ There is no automated UI test. Validation steps before declaring a change done:
 2. Round-trip check: after rebundling, `python3 scripts/unpack.py` and then
    spot-check that a grep for the edited identifier still appears in
    `src/<uuid>.js`. If it doesn't, the encoding broke.
-3. UUID alignment: the template references 28 UUIDs and the manifest has
-   28 entries; the two sets must match. `rebundle.py` leaves unknown UUIDs
+3. UUID alignment: the template references 26 UUIDs and the manifest has
+   26 entries; the two sets must match. `rebundle.py` leaves unknown UUIDs
    alone so this is preserved automatically, but worth re-checking after any
    change that edits the template or manifest.
 4. **Ask the user to hard-refresh and report**. The agent can't see the

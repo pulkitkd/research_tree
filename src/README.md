@@ -11,11 +11,13 @@ each one is:
 | UUID prefix | role |
 |---|---|
 | `9ba52a2c-…` | **store** — `useStore()` hook, seed data, undo/redo, localStorage persistence, sketchy-path helpers |
-| `d3d95e3d-…` | **shared components** — `SketchyNode`, `DetailPanel`, `StatusChip`, hint strip |
-| `8b0c5eed-…` | **view: V1 Spine-Snap** — opinionated git-graph / strict lanes |
-| `88310a16-…` | **view: V2 Notebook Trellis** — lab-notebook cards, reading-focused |
-| `41bd197f-…` | **view: V4 Freeform Canvas** — default; pan/zoom |
-| `c35e7b2e-…` | **app shell** — top bar, tabs, tweaks panel, export/import, bootstraps `<App/>` |
+| `d3d95e3d-…` | **shared components** — `SketchyNode`, `DetailForm`, `StatusChip`, `Legend`, drag/Ctrl+click hooks |
+| `41bd197f-…` | **view: Freeform Canvas** — the only view; pan, drag-to-create, modal detail panel |
+| `c35e7b2e-…` | **app shell** — top bar, export/import, undo/redo keybinds, bootstraps `<App/>` |
+
+The earlier Spine-Snap and Notebook Trellis views live in `../archive/` — not
+part of the bundle. Restore by moving back into `src/` and re-adding manifest
+entries + `<script src="…">` lines in `index.template.html`.
 
 ## Edit loop
 

@@ -10,8 +10,6 @@ browser, no server required. State persists to `localStorage` per browser; use
 
 ### Top bar
 
-- **tabs A / B / C** — switch between Freeform Canvas, Spine-Snap, and
-  Notebook Trellis layouts (all three share the same underlying tree)
 - **export ↑** — download the current tree as
   `research-tree-YYYY-MM-DD.json`
 - **import ↓** — load a tree from a JSON file (replaces the current one;
@@ -26,7 +24,7 @@ browser, no server required. State persists to `localStorage` per browser; use
 
 Keyboard shortcuts are suppressed while typing in a text field.
 
-Tree interaction (in any of the three views):
+Tree interaction:
 
 - **drag** a node to move it
 - **drag the `+`** handle from one node onto another to connect them

@@ -216,17 +216,6 @@ function sketchPath(x1, y1, x2, y2, bendSeed = '') {
   return `M ${x1},${y1} C ${c1x},${c1y} ${c2x},${c2y} ${x2},${y2}`;
 }
 
-// step path for v1 — horizontal then vertical
-function stepPath(x1, y1, x2, y2, id='') {
-  const [w1, w2] = wobble(id, 3);
-  if (Math.abs(y2 - y1) < 4) {
-    return `M ${x1},${y1} Q ${(x1+x2)/2 + w1},${y1 + w2} ${x2},${y2}`;
-  }
-  // horizontal lane, drop to new lane
-  const mid = x1 + (x2 - x1) * 0.55 + w1;
-  return `M ${x1},${y1} L ${mid - 10},${y1} Q ${mid},${y1} ${mid},${y1 + Math.sign(y2-y1)*10} L ${mid},${y2 - Math.sign(y2-y1)*10} Q ${mid},${y2} ${mid+10},${y2} L ${x2},${y2}`;
-}
-
 window.useStore = useStore;
 window.STATUSES = STATUSES;
 window.seedNodes = seedNodes;
@@ -234,4 +223,3 @@ window.STAGE_X = STAGE_X;
 window.LANE_Y = LANE_Y;
 window.wobble = wobble;
 window.sketchPath = sketchPath;
-window.stepPath = stepPath;

@@ -1,24 +1,16 @@
-// App shell — tabs, shared store, export/import.
+// App shell — top bar, shared store, export/import.
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "defaultView": "v4",
   "hSpace": 1.0,
   "vSpace": 1.0
 }/*EDITMODE-END*/;
 
-// Views still read tweaks.hSpace / tweaks.vSpace for layout math; the UI to
+// V4Canvas reads tweaks.hSpace / tweaks.vSpace for layout math; the UI to
 // change them was dropped, so just freeze at defaults.
 const tweaks = { hSpace: TWEAK_DEFAULTS.hSpace, vSpace: TWEAK_DEFAULTS.vSpace };
 
 function App() {
   const store = useStore();
-  const [view, setView] = React.useState(() => {
-    try { return localStorage.getItem('research-tree-view') || TWEAK_DEFAULTS.defaultView; } catch (e) { return TWEAK_DEFAULTS.defaultView; }
-  });
-
-  React.useEffect(() => {
-    try { localStorage.setItem('research-tree-view', view); } catch(e) {}
-  }, [view]);
 
   React.useEffect(() => {
     const onKey = (e) => {
@@ -73,33 +65,11 @@ function App() {
     reader.readAsText(file);
   };
 
-  const tabs = [
-    { id: 'v4', num: 'A', label: 'Freeform Canvas' },
-    { id: 'v1', num: 'B', label: 'Spine-Snap' },
-    { id: 'v2', num: 'C', label: 'Notebook Trellis' },
-  ];
-
-  const subtitles = {
-    v4: 'daily use · messy state · get out of the way',
-    v1: 'opinionated git-graph · strict lanes · big-picture reviews',
-    v2: 'lab-notebook · read the tree · journaling after time away',
-  };
-
   return (
     <>
       <div className="topbar">
         <div className="title">research <span className="accent">tree</span></div>
-        <div className="subtitle">// {subtitles[view]}</div>
-        <div className="tabs">
-          {tabs.map(t => (
-            <button key={t.id}
-              data-screen-label={`${t.num} ${t.label}`}
-              className={`tab ${view === t.id ? 'active' : ''}`}
-              onClick={() => setView(t.id)}>
-              <span className="num">{t.num}</span>{t.label}
-            </button>
-          ))}
-        </div>
+        <div className="subtitle">// daily use · messy state · get out of the way</div>
         <div className="io-buttons" style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
           <button className="btn ghost" onClick={exportJson} title="Download current tree as JSON">export ↑</button>
           <button className="btn ghost" onClick={() => fileInputRef.current && fileInputRef.current.click()} title="Load a tree from a JSON file (replaces current)">import ↓</button>
@@ -107,9 +77,7 @@ function App() {
         </div>
       </div>
 
-      {view === 'v4' && <V4Canvas   store={store} tweaks={tweaks} />}
-      {view === 'v1' && <V1Spine    store={store} tweaks={tweaks} />}
-      {view === 'v2' && <V2Notebook store={store} tweaks={tweaks} />}
+      <V4Canvas store={store} tweaks={tweaks} />
     </>
   );
 }

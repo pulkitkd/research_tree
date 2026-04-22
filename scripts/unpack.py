@@ -21,12 +21,10 @@ HTML = REPO / "Research Tree _standalone_.html"
 SRC = REPO / "src"
 VENDOR = REPO / "build" / "vendor"
 
-# The six app source UUIDs (everything else is vendor / fonts)
+# The four app source UUIDs (everything else is vendor / fonts)
 APP_UUIDS = {
     "9ba52a2c-e8e3-4717-a44e-d8f4d047e4db",  # store
     "d3d95e3d-7790-44fc-aac0-00ff09ececcf",  # components
-    "8b0c5eed-15d1-4958-90be-3364c11a1b54",  # view: spine
-    "88310a16-c44c-4a2c-a0b4-12d6ab6f330a",  # view: notebook
     "41bd197f-f463-437b-a4d5-b695b5c985ff",  # view: canvas
     "c35e7b2e-fe06-48c3-91b4-d56af7c6a99d",  # app shell
 }
