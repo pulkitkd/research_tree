@@ -69,22 +69,34 @@ Unpacked sources live in [`src/`](src/) — see
 
 ## Future updates
 
-- **Branch roots.** Flag any node as a "branch root" to mark it as the
-  entry point of a project/theme. The flagged node renders with a larger
-  heading-style title, so at a glance you can tell which part of the tree
-  is the lucie work, which is the ngcm work, etc. Spatially independent —
-  survives dragging nodes around.
-- **Promote todo → node.** A button next to each checkbox in the detail
-  panel that turns the todo into a real child node — title copied from the
-  todo text, the corresponding line stripped from the parent's
-  description. For when a sub-task outgrows a bullet and needs its own
-  substructure.
-- **Collapse nodes → todos.** The inverse of promote. Select a group of
-  descendants of some node and collapse them into that node: their titles
-  become todos in its description, and the nodes themselves are removed.
-  For shrinking a completed subtree back into its entry point once the
-  work is done.
+Mental model: **each node is a captured thought / first-class todo.**
+The `[ ]` lines inside a description are planning scratch — a thinking
+aid for one node, not a separate todo list. The planned work below
+follows from that.
+
+- **List view of the tree.** Same nodes, rendered as rows — filterable
+  by status, groupable by root-descendant (= project), sortable by
+  date-touched. Answers "what are my 7 open items across 3 projects" in
+  a way the spatial view can't.
+- **Quick-capture shortcut.** An `n` keypress that spawns a node with
+  its title input auto-focused; enter commits without opening the full
+  detail card. Lowers the friction of "gotta pin this thought down" to
+  one keystroke plus typing.
+- **Promote todo → node.** A button next to each `[ ]` line in the
+  detail panel that turns the todo into a real child node — title
+  copied from the todo text, the line stripped from the parent's
+  description. The moment a scratch item crosses into "I'm tracking
+  this."
+- **Collapse nodes → todos.** The inverse of promote. Select
+  descendants of some node and collapse them into it: their titles
+  become todos in its description, and the nodes themselves are
+  removed. The moment a subtree is done and its details demote back to
+  historical notes.
+- **Branch roots.** Flag any node as a "branch root" (project entry
+  point). Renders its title larger/bolder on the canvas, and — more
+  importantly — provides the grouping axis the list view uses to
+  answer "which project does this node belong to."
 - **Non-modal detail dock.** Replace the centered modal with a panel
-  docked at the bottom of the screen, so the canvas stays visible and
-  interactive while you edit a node's description. Especially useful
-  alongside todos, which encourage more description editing.
+  docked at the bottom, so the canvas stays visible while you edit a
+  node's description. Pays off more once promote/collapse land, since
+  description-editing gets more frequent.
