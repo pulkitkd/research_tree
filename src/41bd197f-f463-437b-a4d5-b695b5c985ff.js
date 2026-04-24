@@ -207,7 +207,18 @@ function V4Canvas({ store, tweaks }) {
           {laid.map(n => (n.parents||[]).map(pid => {
             const p = byId[pid]; if (!p) return null;
             const abandoned = n.status === 'abandoned' || p.status === 'abandoned';
-            return <path key={`e-${pid}-${n.id}`} d={sketchPath(p.x + 14, p.y, n.x - 14, n.y, pid+n.id)} className={`edge ${abandoned ? 'abandoned' : ''}`} />;
+            const x1 = p.x + 14, y1 = p.y, x2 = n.x - 14, y2 = n.y;
+            const mid = sketchMid(x1, y1, x2, y2, pid+n.id);
+            return (
+              <g key={`e-${pid}-${n.id}`}>
+                <path d={sketchPath(x1, y1, x2, y2, pid+n.id)} className={`edge ${abandoned ? 'abandoned' : ''}`} />
+                <path
+                  d="M -2.2,-2.6 L 3.6,0 L -2.2,2.6 Z"
+                  transform={`translate(${mid.x},${mid.y}) rotate(${mid.angle})`}
+                  className={`edge-arrow ${abandoned ? 'abandoned' : ''}`}
+                />
+              </g>
+            );
           }))}
 
           {addDrag.drag && (<>

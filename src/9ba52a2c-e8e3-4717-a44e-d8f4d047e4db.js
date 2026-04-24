@@ -215,20 +215,34 @@ function wobble(seed, amp = 3) {
 }
 
 // Sketchy path between two points — slight curve + jitter.
-function sketchPath(x1, y1, x2, y2, bendSeed = '') {
+// Control points factored out so sketchMid can mirror them exactly.
+function sketchControls(x1, y1, x2, y2, bendSeed = '') {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const [w1] = wobble(bendSeed + 'a', 5);
   const [w2] = wobble(bendSeed + 'b', 5);
-  // for mostly-horizontal: arc gently; for mostly-vertical: same
-  const mx = x1 + dx / 2;
-  const my = y1 + dy / 2;
-  // control points
   const c1x = x1 + dx * 0.35 + w1;
   const c1y = y1 + dy * 0.2 - Math.abs(dx) * 0.05;
   const c2x = x1 + dx * 0.65 + w2;
   const c2y = y1 + dy * 0.8 + Math.abs(dx) * 0.05;
+  return { c1x, c1y, c2x, c2y };
+}
+function sketchPath(x1, y1, x2, y2, bendSeed = '') {
+  const { c1x, c1y, c2x, c2y } = sketchControls(x1, y1, x2, y2, bendSeed);
   return `M ${x1},${y1} C ${c1x},${c1y} ${c2x},${c2y} ${x2},${y2}`;
+}
+// Midpoint + tangent angle (deg) of the same cubic bezier, for placing a
+// directional arrowhead halfway along the edge.
+function sketchMid(x1, y1, x2, y2, bendSeed = '') {
+  const { c1x, c1y, c2x, c2y } = sketchControls(x1, y1, x2, y2, bendSeed);
+  // B(0.5) = 0.125 P0 + 0.375 P1 + 0.375 P2 + 0.125 P3
+  const mx = 0.125*x1 + 0.375*c1x + 0.375*c2x + 0.125*x2;
+  const my = 0.125*y1 + 0.375*c1y + 0.375*c2y + 0.125*y2;
+  // B'(0.5) ∝ (P3 + P2) − (P1 + P0) — sign is all we need for atan2.
+  const tx = (x2 + c2x) - (c1x + x1);
+  const ty = (y2 + c2y) - (c1y + y1);
+  const angle = Math.atan2(ty, tx) * 180 / Math.PI;
+  return { x: mx, y: my, angle };
 }
 
 window.useStore = useStore;
@@ -238,3 +252,4 @@ window.STAGE_X = STAGE_X;
 window.LANE_Y = LANE_Y;
 window.wobble = wobble;
 window.sketchPath = sketchPath;
+window.sketchMid = sketchMid;

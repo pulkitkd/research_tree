@@ -515,6 +515,12 @@ body {
   stroke-linecap: round;
 }
 .edge.abandoned { opacity: 0.35; stroke-dasharray: 4 3; }
+.edge-arrow {
+  fill: var(--ink);
+  stroke: none;
+  pointer-events: none;
+}
+.edge-arrow.abandoned { opacity: 0.35; }
 
 /* selection ring — a translucent rust fill behind the node, reads like a
    soft highlight/glow. Solid fill is the persistent "selected" state; the
