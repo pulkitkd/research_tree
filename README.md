@@ -100,3 +100,46 @@ follows from that.
   docked at the bottom, so the canvas stays visible while you edit a
   node's description. Pays off more once promote/collapse land, since
   description-editing gets more frequent.
+
+### Bigger direction: shared artifact with an LLM agent
+
+A different bet than the list above. The features above make this a
+better *solo* tool. This direction reframes the whole thing: the tree
+becomes a **shared map between you and an LLM agent helping with the
+work**. The agent reads the tree at the start of a session to pick up
+context, proposes updates as work progresses (mark done, add new
+children, promote todos, collapse completed subtrees), and writes the
+updated tree back. You keep the bird's-eye view; the agent gets
+persistent memory across sessions that isn't opaque — the memory *is*
+the visible artifact.
+
+Why it's different from existing "LLM memory" solutions (project
+memory, MCP servers, etc.): those are opaque to you. Here, the memory
+is a map you can inspect, hand-edit, and share. The agent proposes;
+you own.
+
+Feasibility is high. The tree is already JSON; no model changes
+needed. Open design questions to work through when building:
+
+- **Where the tree lives.** Per-project (`.research-tree.json` in each
+  repo the agent works in) is the clean default. A single global tree
+  is harder — the agent has to know where to look.
+- **Conflict model.** You edit visually, the agent edits via file — they
+  can step on each other. Simplest mitigation: agent's updates are
+  *proposals* you accept, not direct writes.
+- **Browser ↔ filesystem bridge.** The app lives in a browser and has
+  no filesystem access by default. Options: Chrome's File System
+  Access API (Chrome-only); a tiny local bridge (breaks the
+  zero-server ethos); or manual export/import as the sync step (no
+  new infrastructure, slight UX friction — probably the right starting
+  point).
+- **Scope mismatch.** The agent knows what happened in its session; it
+  doesn't know your Monday meeting shifted a deadline. The
+  agent-curated tree captures implementation reality, not the full
+  research state. Good to remember the tree is *your* view — the agent
+  proposes, the human owns.
+
+Minimal prototype path: keep the app as-is, adopt a
+`.research-tree.json` convention per repo, teach the agent (Claude
+Code or similar) to read/propose/write it. The app doesn't need to
+change for the first pass.
