@@ -146,7 +146,7 @@ function Legend() {
   return (
     <div className="legend">
       <div className="legend-item"><span className="legend-dot ld-ongoing"/>ongoing</div>
-      <div className="legend-item"><span className="legend-dot ld-blocked"/>blocked</div>
+      <div className="legend-item"><span className="legend-dot ld-blocked"/>priority</div>
       <div className="legend-item"><span className="legend-dot ld-clarify"/>needs clarification</div>
       <div className="legend-item"><span className="legend-dot ld-done"/>done</div>
       <div className="legend-item"><span className="legend-dot ld-abandoned"/>abandoned</div>

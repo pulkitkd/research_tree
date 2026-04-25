@@ -50,7 +50,7 @@ Keyboard shortcuts are suppressed while typing in a text field.
   rectangle (added to the current selection)
 - **drag** any selected node to move the whole group together
 - when 2+ nodes are selected, a toolbar appears with status chips (mark all
-  as ongoing / blocked / done / …) and a **delete** button
+  as ongoing / priority / done / …) and a **delete** button
 - **click** empty canvas to clear the selection
 
 ### Canvas

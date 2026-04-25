@@ -1,10 +1,12 @@
 // Shared data store — single source of truth across all 4 variants.
 // Node shape: { id, title, description, status, date, x, y, stage, lane, parents: [ids] }
 // status: ongoing | blocked | clarify | done | abandoned
+// (the `blocked` id is shown to the user as "priority" — kept under the
+// old id so saved trees and CSS classes don't need migration.)
 
 const STATUSES = [
   { id: 'ongoing',  label: 'ongoing' },
-  { id: 'blocked',  label: 'blocked' },
+  { id: 'blocked',  label: 'priority' },
   { id: 'clarify',  label: 'needs clarification' },
   { id: 'done',     label: 'done' },
   { id: 'abandoned',label: 'abandoned' },

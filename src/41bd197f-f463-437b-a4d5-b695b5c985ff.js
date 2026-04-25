@@ -11,7 +11,28 @@ function V4Canvas({ store, tweaks }) {
   // Tracks a node that was just created via the `n` shortcut so the dock
   // can auto-focus + select-all on its title for immediate typing.
   const [freshId, setFreshId] = React.useState(null);
-  const [view, setView] = React.useState({ tx: 0, ty: 0, scale: 1 });
+  // Pan/scale persists across reloads so the user keeps their position on
+  // the tree. Stored under a separate key from the nodes so an exported tree
+  // can be imported on another browser without dragging an alien viewport
+  // along with it.
+  const [view, setView] = React.useState(() => {
+    try {
+      const s = localStorage.getItem('research-tree-view-v1');
+      if (s) {
+        const p = JSON.parse(s);
+        if (p && Number.isFinite(p.tx) && Number.isFinite(p.ty)) {
+          return { tx: p.tx, ty: p.ty, scale: Number.isFinite(p.scale) ? p.scale : 1 };
+        }
+      }
+    } catch (e) {}
+    return { tx: 0, ty: 0, scale: 1 };
+  });
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      try { localStorage.setItem('research-tree-view-v1', JSON.stringify(view)); } catch (e) {}
+    }, 200);
+    return () => clearTimeout(t);
+  }, [view]);
   const [pan, setPan] = React.useState(null);
   const panMovedRef = React.useRef(false);
   // dragNode: { ids: [...], offsets: { [id]: {ox,oy} }, moved: bool } — one
