@@ -23,6 +23,7 @@ browser, no server required. State persists to `localStorage` per browser; use
 |---|---|
 | `Ctrl+Z` / `Cmd+Z` | undo |
 | `Ctrl+Shift+Z` / `Cmd+Shift+Z` / `Ctrl+Y` | redo |
+| `Delete` / `Backspace` | delete the currently selected node(s) |
 
 Keyboard shortcuts are suppressed while typing in a text field.
 

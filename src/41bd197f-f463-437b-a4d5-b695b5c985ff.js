@@ -151,6 +151,22 @@ function V4Canvas({ store, tweaks }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [marquee]);
 
+  // Delete / Backspace removes the current selection. Suppressed while
+  // typing in an input or textarea so editing titles/descriptions is safe.
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      const t = e.target;
+      const tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+      if (!selected.size) return;
+      e.preventDefault();
+      deleteSelected();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected]);
+
   const openNode = openId ? laid.find(n => n.id === openId) : null;
   const overId = addDrag.drag?.overId;
 
