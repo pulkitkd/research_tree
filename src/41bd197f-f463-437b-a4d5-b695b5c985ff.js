@@ -6,6 +6,9 @@ function V4Canvas({ store, tweaks }) {
   // gestures like shift+click aren't blocked by the modal.
   const [selected, setSelected] = React.useState(() => new Set());
   const [openId, setOpenId] = React.useState(null);
+  // Tracks a node that was just created via the `n` shortcut so the modal
+  // can auto-focus + select-all on its title for immediate typing.
+  const [freshId, setFreshId] = React.useState(null);
   const [view, setView] = React.useState({ tx: 0, ty: 0, scale: 1 });
   const [pan, setPan] = React.useState(null);
   const panMovedRef = React.useRef(false);
@@ -167,10 +170,85 @@ function V4Canvas({ store, tweaks }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [selected]);
 
+  // `n` spawns a new node at the canvas center and opens its detail card
+  // for immediate title entry. Only fires bare (no Ctrl/Cmd/Alt) so browser
+  // shortcuts like Ctrl+N still work; suppressed while typing.
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'n' && e.key !== 'N') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      const tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable)) return;
+      e.preventDefault();
+      const cx = 400 + (Math.random() - 0.5) * 120;
+      const cy = 300 + (Math.random() - 0.5) * 80;
+      const id = add({ title: 'new node', parents: [], x: cx, y: cy, stage: 0, lane: 0, status: 'ongoing' });
+      setSelected(new Set([id]));
+      setOpenId(id);
+      setFreshId(id);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [add]);
+
+  // Enter / Escape / arrow-key navigation. All gated to "card not open"
+  // and "exactly one node selected" except Escape, which works even from
+  // inside an input field so it can dismiss the modal or cancel a
+  // pending Ctrl+click.
+  React.useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      const tag = t && t.tagName;
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable);
+
+      if (e.key === 'Escape') {
+        if (openId != null) { e.preventDefault(); closeModal(); return; }
+        if (ctrl.firstId) { e.preventDefault(); ctrl.cancel(); return; }
+        return;
+      }
+
+      if (inField) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (openId != null) return;
+      if (selected.size !== 1) return;
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        setOpenId([...selected][0]);
+        return;
+      }
+
+      const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+      const dir = arrows[e.key];
+      if (!dir) return;
+      e.preventDefault();
+      const [dx, dy] = dir;
+      const cur = byId[[...selected][0]];
+      if (!cur) return;
+      // Spatial nearest in the chosen direction. Score each candidate by
+      // distance + perpendicular-axis penalty so on-axis neighbors win
+      // over slightly closer but heavily off-axis ones.
+      let best = null, bestScore = Infinity;
+      for (const n of laid) {
+        if (n.id === cur.id) continue;
+        const ddx = n.x - cur.x, ddy = n.y - cur.y;
+        const along = ddx * dx + ddy * dy;
+        if (along <= 0) continue;
+        const perp = Math.abs(ddx * dy - ddy * dx);
+        const score = Math.hypot(ddx, ddy) + perp * 1.5;
+        if (score < bestScore) { bestScore = score; best = n; }
+      }
+      if (best) setSelected(new Set([best.id]));
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selected, openId, laid, ctrl]);
+
   const openNode = openId ? laid.find(n => n.id === openId) : null;
   const overId = addDrag.drag?.overId;
 
-  const closeModal = () => setOpenId(null);
+  const closeModal = () => { setOpenId(null); setFreshId(null); };
 
   const applyBatchStatus = (statusId) => {
     const patches = {};
@@ -291,7 +369,7 @@ function V4Canvas({ store, tweaks }) {
       {openNode && (
         <div className="modal-backdrop" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <DetailForm node={openNode} onChange={patch => update(openNode.id, patch)} onDelete={() => { remove(openNode.id); closeModal(); }} onClose={closeModal} />
+            <DetailForm node={openNode} onChange={patch => update(openNode.id, patch)} onDelete={() => { remove(openNode.id); closeModal(); }} onClose={closeModal} autoFocusTitle={openId === freshId} />
           </div>
         </div>
       )}

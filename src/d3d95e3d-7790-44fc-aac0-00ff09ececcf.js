@@ -107,7 +107,7 @@ function StatusChip({ value, onChange }) {
   );
 }
 
-function DetailForm({ node, onChange, onDelete, onClose }) {
+function DetailForm({ node, onChange, onDelete, onClose, autoFocusTitle }) {
   if (!node) return null;
   return (
     <>
@@ -115,7 +115,12 @@ function DetailForm({ node, onChange, onDelete, onClose }) {
 
       <div className="field">
         <label>Title</label>
-        <input value={node.title} onChange={e => onChange({ title: e.target.value })} />
+        <input
+          value={node.title}
+          onChange={e => onChange({ title: e.target.value })}
+          autoFocus={autoFocusTitle || undefined}
+          onFocus={autoFocusTitle ? (e) => e.target.select() : undefined}
+        />
       </div>
       <div className="field">
         <label>Date</label>

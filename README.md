@@ -24,6 +24,10 @@ browser, no server required. State persists to `localStorage` per browser; use
 | `Ctrl+Z` / `Cmd+Z` | undo |
 | `Ctrl+Shift+Z` / `Cmd+Shift+Z` / `Ctrl+Y` | redo |
 | `Delete` / `Backspace` | delete the currently selected node(s) |
+| `n` | new node — opens its detail card with the title pre-selected for immediate typing |
+| `Enter` | open the detail card for the selected node (only when exactly one is selected) |
+| `Esc` | close the open detail card; cancels a mid-gesture Ctrl+click; cancels a marquee in progress |
+| arrow keys | move the selection to the spatially nearest node in that direction (only when exactly one is selected) |
 
 Keyboard shortcuts are suppressed while typing in a text field.
 
