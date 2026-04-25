@@ -694,25 +694,41 @@ g.node-g:hover .add-handle-g {
 .batch-toolbar .status-chip:hover { background: var(--paper-2); }
 .batch-toolbar .btn.danger { padding: 3px 10px; font-size: 13px; }
 
-/* modal (v4) */
-.modal-backdrop {
+/* detail dock — non-modal panel anchored to the bottom-right edge.
+   Visible when exactly one node is selected AND the dock has been opened
+   explicitly (double-click / Enter / `n`). Canvas stays interactive
+   behind/around it. */
+.dock {
   position: absolute;
-  inset: 0;
-  background: rgba(42,33,25,0.25);
-  z-index: 40;
-  display: grid;
-  place-items: center;
-}
-.modal {
-  width: 440px;
+  right: 20px;
+  bottom: 20px;
+  width: 380px;
+  height: 60vh;
+  max-height: calc(100vh - 100px);
   background: var(--paper);
   border: 2px solid var(--ink);
   border-radius: 14px 22px 14px 22px;
-  padding: 22px 24px;
+  padding: 18px 22px;
   box-shadow: 6px 7px 0 rgba(42,33,25,0.12);
   transform: rotate(-0.3deg);
-  position: relative;
+  z-index: 30;
+  overflow-y: auto;
 }
+.dock .xclose {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.dock .xclose:hover { color: var(--rust); }
+/* Tighter description textarea inside the dock so the whole form fits in
+   60vh without forcing scroll on common viewports. */
+.dock .field textarea { min-height: 200px; }
 
 /* scrollbars */
 ::-webkit-scrollbar { width: 10px; height: 10px; }

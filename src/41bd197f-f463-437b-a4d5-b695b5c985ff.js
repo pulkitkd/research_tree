@@ -2,11 +2,13 @@ function V4Canvas({ store, tweaks }) {
   const { nodes, update, updateMany, remove, removeMany, add, connect, toggleLink, undo, redo, canUndo, canRedo } = store;
   const svgRef = React.useRef(null);
   // `selected` is a Set of ids — purely for selection (sel-ring + group drag).
-  // Detail card is gated by `openId` (double-click to open) so selection
-  // gestures like shift+click aren't blocked by the modal.
+  // Detail dock is gated by `openId` (explicit open via double-click / Enter /
+  // `n`) so plain clicks just inspect status without committing to editing.
+  // While the dock is open, single-click on another node swaps its content;
+  // any change that takes selection out of single-node closes it.
   const [selected, setSelected] = React.useState(() => new Set());
   const [openId, setOpenId] = React.useState(null);
-  // Tracks a node that was just created via the `n` shortcut so the modal
+  // Tracks a node that was just created via the `n` shortcut so the dock
   // can auto-focus + select-all on its title for immediate typing.
   const [freshId, setFreshId] = React.useState(null);
   const [view, setView] = React.useState({ tx: 0, ty: 0, scale: 1 });
@@ -192,10 +194,11 @@ function V4Canvas({ store, tweaks }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [add]);
 
-  // Enter / Escape / arrow-key navigation. All gated to "card not open"
-  // and "exactly one node selected" except Escape, which works even from
-  // inside an input field so it can dismiss the modal or cancel a
-  // pending Ctrl+click.
+  // Enter / Escape / arrow-key navigation. Escape works even from inside an
+  // input field so it can dismiss the dock or cancel a pending Ctrl+click.
+  // Enter is a no-op when the dock is already open (selection is the
+  // selected node already). Arrows navigate spatially, and if the dock is
+  // open they swap its content as you move.
   React.useEffect(() => {
     const onKey = (e) => {
       const t = e.target;
@@ -203,19 +206,20 @@ function V4Canvas({ store, tweaks }) {
       const inField = tag === 'INPUT' || tag === 'TEXTAREA' || (t && t.isContentEditable);
 
       if (e.key === 'Escape') {
-        if (openId != null) { e.preventDefault(); closeModal(); return; }
+        if (openId != null) { e.preventDefault(); closeDock(); return; }
         if (ctrl.firstId) { e.preventDefault(); ctrl.cancel(); return; }
         return;
       }
 
       if (inField) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (openId != null) return;
       if (selected.size !== 1) return;
 
       if (e.key === 'Enter') {
+        if (openId != null) return;
         e.preventDefault();
         setOpenId([...selected][0]);
+        setFreshId(null);
         return;
       }
 
@@ -239,16 +243,29 @@ function V4Canvas({ store, tweaks }) {
         const score = Math.hypot(ddx, ddy) + perp * 1.5;
         if (score < bestScore) { bestScore = score; best = n; }
       }
-      if (best) setSelected(new Set([best.id]));
+      if (best) {
+        setSelected(new Set([best.id]));
+        if (openId != null) { setOpenId(best.id); setFreshId(null); }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [selected, openId, laid, ctrl]);
 
+  // Auto-close the dock whenever selection isn't exactly one node — covers
+  // deselect (click empty canvas), shift-click going to multi-select, marquee
+  // adds, and the node being deleted out from under the dock.
+  React.useEffect(() => {
+    if (openId != null && selected.size !== 1) {
+      setOpenId(null);
+      setFreshId(null);
+    }
+  }, [selected, openId]);
+
   const openNode = openId ? laid.find(n => n.id === openId) : null;
   const overId = addDrag.drag?.overId;
 
-  const closeModal = () => { setOpenId(null); setFreshId(null); };
+  const closeDock = () => { setOpenId(null); setFreshId(null); };
 
   const applyBatchStatus = (statusId) => {
     const patches = {};
@@ -334,7 +351,7 @@ function V4Canvas({ store, tweaks }) {
             const isOver = overId === n.id;
             const isFirst = ctrl.firstId === n.id;
             return (
-              <g key={n.id} onDoubleClick={(e) => { e.stopPropagation(); setOpenId(n.id); }}>
+              <g key={n.id} onDoubleClick={(e) => { e.stopPropagation(); setSelected(new Set([n.id])); setOpenId(n.id); setFreshId(null); }}>
                 {(isOver || isFirst) && <circle cx={n.x} cy={n.y} r="28" fill="none" stroke="var(--rust)" strokeWidth="2.5" strokeDasharray="5 3" />}
                 <SketchyNode
                   node={n}
@@ -355,6 +372,12 @@ function V4Canvas({ store, tweaks }) {
                       });
                     } else {
                       setSelected(new Set([node.id]));
+                      // Dock is non-modal: a single click while it's open
+                      // swaps the displayed node rather than just selecting.
+                      if (openId != null && openId !== node.id) {
+                        setOpenId(node.id);
+                        setFreshId(null);
+                      }
                     }
                   }}
                   onStartDrag={startNodeDrag}
@@ -367,10 +390,8 @@ function V4Canvas({ store, tweaks }) {
       </svg>
 
       {openNode && (
-        <div className="modal-backdrop" onClick={closeModal}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <DetailForm node={openNode} onChange={patch => update(openNode.id, patch)} onDelete={() => { remove(openNode.id); closeModal(); }} onClose={closeModal} autoFocusTitle={openId === freshId} />
-          </div>
+        <div className="dock" onMouseDown={e => e.stopPropagation()}>
+          <DetailForm node={openNode} onChange={patch => update(openNode.id, patch)} onDelete={() => { remove(openNode.id); closeDock(); }} onClose={closeDock} autoFocusTitle={openId === freshId} />
         </div>
       )}
 
